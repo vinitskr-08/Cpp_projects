@@ -33,6 +33,8 @@ public:
     string name;
     char className[10];
     int age;
+    int book[100];
+    int nobk;
     void toUpper()
     {
         for (char &c : name)
@@ -40,14 +42,44 @@ public:
             c = toupper(c);
         }
     }
+    void bookbuy(int b1)
+    {
+        book[nobk] = b1;
+        nobk += 1;
+    }
+    void displaybuy();
 };
 
-int saveData();
-int loadData();
+// Global arrays
+library l[1000];
+student s[1000];
+
+void student::displaybuy()
+{
+    if (nobk > 0)
+    {
+        cout << "Total book bought = " << nobk << endl;
+        cout << "Books bought by the student:-" << endl;
+        for (int i = 0; i < nobk; i++)
+        {
+            cout << "\nBook Sr no = " << book[i] << endl;
+            cout << "Title = " << l[book[i] - 1].title << endl;
+            cout << "Author = " << l[book[i] - 1].author << endl;
+            cout << "Year of publication = " << l[book[i] - 1].year << endl;
+        }
+    }
+    else
+    {
+        cout << "No book bought by the student yet." << endl;
+    }
+}
 
 int n = 1;
 int sn = 1;
 int shdt = 0;
+
+int saveData();
+int loadData();
 
 enum class portal
 {
@@ -64,21 +96,18 @@ int mainmenu1();
 int operation1(int);
 int mainmenu2();
 int operation2(int);
-int fnctn1(); // add book
-int fnctn2(); // view book
-int fnctn3(); // show all book
-int fnctn4(); // delete book
-int fnctn5(); // delete all book
-int fnctn6(); // add student
-int fnctn7(); // edit student
-int fnctn8(); // show student
-int fnctn9(); // show all student
+int fnctn1();  // add book
+int fnctn2();  // view book
+int fnctn3();  // show all book
+int fnctn4();  // delete book
+int fnctn5();  // delete all book
+int fnctn6();  // add student
+int fnctn7();  // edit student
+int fnctn8();  // show student
+int fnctn9();  // show all student
 int fnctn10(); // buy book
 int fnctn11(); // rent book
 int fnctn12(); // return book
-
-library l[1000];
-student s[1000];
 
 int main()
 {
@@ -531,6 +560,8 @@ int fnctn8() // show student
     cout << "\nName = " << s[x - 1].name << endl;
     cout << "Age = " << s[x - 1].age << endl;
     cout << "Class = " << s[x - 1].className << endl;
+    cout << endl;
+    s[x - 1].displaybuy();
     getch();
     system("cls");
 }
@@ -558,15 +589,27 @@ int fnctn10() // buy
 {
     system("cls");
     cout << "===================================" << endl;
-    cout << "            ADD NEW BOOK           " << endl;
+    cout << "             BUY A BOOK            " << endl;
     cout << "===================================" << endl;
-    cout << "\nEnter Book Srno = ";
+    cout << "\nEnter student roll no=";
+    int s1;
+    cin >> s1;
+    cout << "\nYour name = " << s[s1 - 1].name << endl;
+    cout << "Your class = " << s[s1 - 1].className << endl;
+    cout << "Your age = " << s[s1 - 1].age << endl;
+    cout << "\nEnter Book Srno to be purchased= ";
     int b1;
     cin >> b1;
+    cout << "Title = " << l[b1 - 1].title << endl;
+    cout << "Author = " << l[b1 - 1].author << endl;
+    cout << "Year of publication = " << l[b1 - 1].year << endl;
+    cout << "Units available = " << l[b1 - 1].units << endl;
+    getch();
     if (l[b1 - 1].units > 0)
     {
         l[b1 - 1].units -= 1;
         cout << "\nBook bought successfully !" << endl;
+        s[s1 - 1].bookbuy(b1);
     }
     else
     {
