@@ -34,7 +34,10 @@ public:
     char className[10];
     int age;
     int book[100];
+    int rent[100];
     int nobk;
+    int numRent;
+    student() : Rollno(0), age(0), nobk(0), numRent(0) { className[0] = '\0'; }
     void toUpper()
     {
         for (char &c : name)
@@ -47,7 +50,28 @@ public:
         book[nobk] = b1;
         nobk += 1;
     }
+    void rentbook(int b1)
+    {
+        rent[numRent] = b1;
+        numRent += 1;
+    }
+    void returnbook(int b1)
+    {
+        for (int i = 0; i < numRent; i++)
+        {
+            if (rent[i] == b1)
+            {
+                for (int j = i; j < numRent - 1; j++)
+                {
+                    rent[j] = rent[j + 1];
+                }
+                numRent -= 1;
+                break;
+            }
+        }
+    }
     void displaybuy();
+    void displayrent();
 };
 
 // Global arrays
@@ -73,11 +97,30 @@ void student::displaybuy()
         cout << "No book bought by the student yet." << endl;
     }
 }
+void student::displayrent()
+{
+    if (numRent > 0)
+    {
+        cout << "Total book rented = " << numRent << endl;
+        cout << "Books rented by the student:-" << endl;
+        for (int i = 0; i < numRent; i++)
+        {
+            cout << "\nBook Sr no = " << rent[i] << endl;
+            cout << "Title = " << l[rent[i] - 1].title << endl;
+            cout << "Author = " << l[rent[i] - 1].author << endl;
+            cout << "Year of publication = " << l[rent[i] - 1].year << endl;
+        }
+    }
+    else
+    {
+        cout << "No book rented by the student yet." << endl;
+    }
+}
 
 int n = 1;
 int sn = 1;
 int shdt = 0;
-
+int shstd = 1;
 int saveData();
 int loadData();
 
@@ -89,9 +132,9 @@ enum class portal
 };
 int wlcm();
 portal login();
-int abtlib();
-int abtapp();
-int usrgdl();
+int abtlib(); // about library
+int abtapp(); // about application
+int usrgdl(); // user guidlines
 int mainmenu1();
 int operation1(int);
 int mainmenu2();
@@ -99,19 +142,23 @@ int operation2(int);
 int fnctn1();  // add book
 int fnctn2();  // view book
 int fnctn3();  // show all book
-int fnctn4();  // delete book
-int fnctn5();  // delete all book
-int fnctn6();  // add student
-int fnctn7();  // edit student
-int fnctn8();  // show student
-int fnctn9();  // show all student
-int fnctn10(); // buy book
-int fnctn11(); // rent book
-int fnctn12(); // return book
+int fnctn4();  // edit book
+int fnctn5();  // delete book
+int fnctn6();  // delete all book
+int fnctn7();  // add student
+int fnctn8();  // edit student
+int fnctn9();  // show student
+int fnctn10(); // show all student
+int fnctn11(); // buy book
+int fnctn12(); // rent book
+int fnctn13(); // return book
+int fnctn14(); // delete student
+int fnctn15(); // delete all students
 
 int main()
 {
     system("cls");
+    loadData();
     int main1 = wlcm();
     do
     {
@@ -190,12 +237,81 @@ int main()
 
     } while (main1 != 0);
     system("cls");
+    saveData();
     cout << "Thank you for using the applicaion!!";
     cout << "\n\nPress any key to exit";
     getch();
     system("cls");
 }
+int saveData()
+{
+    ofstream file("library.dat");
 
+    file << sn << " " << n << endl;
+    // Save all books
+    for (int i = 0; i < sn - 1; i++)
+    {
+        file << l[i].Srno << " " << l[i].title << " " << l[i].author << " "
+             << l[i].year << " " << l[i].units << endl;
+    }
+    // Save all students with their books
+    for (int i = 0; i < n - 1; i++)
+    {
+        file << s[i].Rollno << " " << s[i].name << " " << s[i].age << " "
+             << s[i].className << " " << s[i].nobk << " " << s[i].numRent << endl;
+
+        // Save bought books for this student
+        for (int j = 0; j < s[i].nobk; j++)
+        {
+            file << s[i].book[j] << " ";
+        }
+        file << endl;
+
+        // Save rented books for this student
+        for (int j = 0; j < s[i].numRent; j++)
+        {
+            file << s[i].rent[j] << " ";
+        }
+        file << endl;
+    }
+    file.close();
+    return 1;
+}
+
+int loadData()
+{
+    ifstream file("library.dat");
+    if (!file.is_open())
+    {
+        return 0;
+    }
+    // Load number of books and students
+    file >> sn >> n;
+    // Load all books
+    for (int i = 0; i < sn - 1; i++)
+    {
+        file >> l[i].Srno >> l[i].title >> l[i].author >> l[i].year >> l[i].units;
+    }
+    // Load all students with their books
+    for (int i = 0; i < n - 1; i++)
+    {
+        file >> s[i].Rollno >> s[i].name >> s[i].age >> s[i].className >> s[i].nobk >> s[i].numRent;
+
+        // Load bought books for this student
+        for (int j = 0; j < s[i].nobk; j++)
+        {
+            file >> s[i].book[j];
+        }
+
+        // Load rented books for this student
+        for (int j = 0; j < s[i].numRent; j++)
+        {
+            file >> s[i].rent[j];
+        }
+    }
+    file.close();
+    return 1;
+}
 int wlcm()
 {
     system("cls");
@@ -249,15 +365,18 @@ int mainmenu1()
     cout << "[1]  Add a new Book" << endl;
     cout << "[2]  View Book" << endl;
     cout << "[3]  Show all Books" << endl;
-    cout << "[4]  Delete Book" << endl;
-    cout << "[5]  Delete all Book" << endl;
-    cout << "[6]  Add student " << endl;
-    cout << "[7]  Edit student" << endl;
-    cout << "[8]  Show student" << endl;
-    cout << "[9]  Show all student" << endl;
-    cout << "[10] Buy Book " << endl;
-    cout << "[11] Rent Book" << endl;
-    cout << "[12] Return Book" << endl;
+    cout << "[4]  Edit Book" << endl;
+    cout << "[5]  Delete Book" << endl;
+    cout << "[6]  Delete all Book" << endl;
+    cout << "[7]  Add student " << endl;
+    cout << "[8]  Edit student" << endl;
+    cout << "[9]  Show student" << endl;
+    cout << "[10] Show all student" << endl;
+    cout << "[11] Buy Book " << endl;
+    cout << "[12] Rent Book" << endl;
+    cout << "[13] Return Book" << endl;
+    cout << "[14] Delete student" << endl;
+    cout << "[15] Delete all students" << endl;
     cout << "[0]  Go back to home screen" << endl;
     cout << "===================================" << endl;
     cout << "\nEnter your choice = ";
@@ -305,6 +424,15 @@ int operation1(int menu1)
     case 12:
         fnctn12();
         break;
+    case 13:
+        fnctn13();
+        break;
+    case 14:
+        fnctn14();
+        break;
+    case 15:
+        fnctn15();
+        break;
     }
 }
 
@@ -323,6 +451,7 @@ int mainmenu2()
     cout << "[6] Buy Book " << endl;
     cout << "[7] Rent Book" << endl;
     cout << "[8] Return Book" << endl;
+    cout << "[9] Delete student" << endl;
     cout << "[0] Go back to home screen" << endl;
     cout << "===================================" << endl;
     cout << "\nEnter your choice = ";
@@ -341,44 +470,152 @@ int operation2(int menu2)
         fnctn3();
         break;
     case 3:
-        fnctn6();
-        break;
-    case 4:
         fnctn7();
         break;
-    case 5:
+    case 4:
         fnctn8();
         break;
-    case 6:
-        fnctn10();
+    case 5:
+        fnctn9();
         break;
-    case 7:
+    case 6:
         fnctn11();
         break;
-    case 8:
+    case 7:
         fnctn12();
+        break;
+    case 8:
+        fnctn13();
+        break;
+    case 9:
+        fnctn14();
         break;
     }
 }
 
-int abtlib()
+int abtlib() // about library
 {
     system("cls");
-    cout << "In section about library";
+    cout << "===================================" << endl;
+    cout << "        ABOUT OUR LIBRARY          " << endl;
+    cout << "===================================" << endl;
+    cout << "\n1. Comprehensive Book Collection:-" << endl;
+    cout << "   We maintain a vast collection of books across multiple" << endl;
+    cout << "   subjects and genres for students and teachers." << endl;
+    cout << "\n2. Easy Book Management System:-" << endl;
+    cout << "   Our digital system makes it easy to track, add, and" << endl;
+    cout << "   manage books in the library inventory." << endl;
+    cout << "\n3. Student-Friendly Access:-" << endl;
+    cout << "   Students can easily search, view, and purchase books" << endl;
+    cout << "   according to their academic needs." << endl;
+    cout << "\n4. Real-time Inventory Tracking:-" << endl;
+    cout << "   We maintain live updates on book availability and units" << endl;
+    cout << "   in stock for better resource management." << endl;
+    cout << "\n5. Teacher Portal Features:-" << endl;
+    cout << "   Teachers have exclusive access to add books, manage" << endl;
+    cout << "   students, and oversee library operations." << endl;
+    cout << "\n6. Affordable Book Purchasing:-" << endl;
+    cout << "   Students can buy books directly through the system at" << endl;
+    cout << "   reasonable rates as per library pricing." << endl;
+    cout << "\n7. Book Rental Services:-" << endl;
+    cout << "   We offer flexible rental options for students who need" << endl;
+    cout << "   books temporarily without permanent ownership." << endl;
+    cout << "\n8. Student Record Management:-" << endl;
+    cout << "   Detailed student profiles help us track who has purchased" << endl;
+    cout << "   or rented books and their reading history." << endl;
+    cout << "\n9. Organized Book Directory:-" << endl;
+    cout << "   All books are cataloged with title, author, year of" << endl;
+    cout << "   publication, and available units for quick reference." << endl;
+    cout << "\n10. Secure Book Return System:-" << endl;
+    cout << "    We maintain a streamlined process for book returns and" << endl;
+    cout << "    inventory reconciliation after rental periods." << endl;
+    cout << "\n"
+         << endl;
+    cout << "Press any key to go back to home screen" << endl;
     getch();
 }
 
-int abtapp()
+int abtapp() // about application
 {
     system("cls");
-    cout << "In section about application";
+    cout << "===================================" << endl;
+    cout << "      ABOUT THIS APPLICATION      " << endl;
+    cout << "===================================" << endl;
+    cout << "\n1. EduAuth Library Management System:-" << endl;
+    cout << "   A comprehensive digital solution for managing library" << endl;
+    cout << "   operations in educational institutions." << endl;
+    cout << "\n2. Dual Portal Access:-" << endl;
+    cout << "   Provides separate portals for teachers and students with" << endl;
+    cout << "   role-based access and specific functionalities." << endl;
+    cout << "\n3. Book Inventory Management:-" << endl;
+    cout << "   Complete control over adding, viewing, editing, and" << endl;
+    cout << "   deleting books from the library database." << endl;
+    cout << "\n4. Student Profile Management:-" << endl;
+    cout << "   Create and maintain detailed student records including" << endl;
+    cout << "   name, age, class, and purchase/rental history." << endl;
+    cout << "\n5. Transaction Tracking:-" << endl;
+    cout << "   Automatically tracks all book purchases and rentals" << endl;
+    cout << "   with complete transaction history for each student." << endl;
+    cout << "\n6. Secure Authentication:-" << endl;
+    cout << "   Password-protected login system to ensure only authorized" << endl;
+    cout << "   users can access specific portals and features." << endl;
+    cout << "\n7. User-Friendly Interface:-" << endl;
+    cout << "   Simple menu-driven console interface that makes navigation" << endl;
+    cout << "   intuitive for both technical and non-technical users." << endl;
+    cout << "\n8. Real-time Data Management:-" << endl;
+    cout << "   Instant updates to inventory when books are purchased," << endl;
+    cout << "   rented, or returned by students." << endl;
+    cout << "\n9. Comprehensive Search Features:-" << endl;
+    cout << "   Find books by serial number and view detailed information" << endl;
+    cout << "   including title, author, and publication year." << endl;
+    cout << "\n10. Educational Support Tool:-" << endl;
+    cout << "    Designed specifically to support educational institutions" << endl;
+    cout << "    in managing their library resources efficiently." << endl;
+    cout << "\n"
+         << endl;
+    cout << "Press any key to go back to home screen" << endl;
     getch();
 }
 
-int usrgdl()
+int usrgdl() // user guidlines
 {
     system("cls");
-    cout << "In section user guidlines ";
+    cout << "===================================" << endl;
+    cout << "        USER GUIDELINES            " << endl;
+    cout << "===================================" << endl;
+    cout << "\n1. Login Credentials:-" << endl;
+    cout << "   Teacher: ID 'Teacher', Password 'teacher@lib'" << endl;
+    cout << "   Student: ID 'Student', Password 'student@lib'" << endl;
+    cout << "\n2. Teacher Portal Operations:-" << endl;
+    cout << "   Teachers can add, view, edit, and delete books and" << endl;
+    cout << "   student records. Use the menu options to navigate." << endl;
+    cout << "\n3. Student Portal Operations:-" << endl;
+    cout << "   Students can view books, manage their profiles, and" << endl;
+    cout << "   purchase or rent books from the library collection." << endl;
+    cout << "\n4. Adding Books:-" << endl;
+    cout << "   Enter book details including title, author, year of" << endl;
+    cout << "   publication, and available units in the library." << endl;
+    cout << "\n5. Student Registration:-" << endl;
+    cout << "   Provide student details such as name, age, and class." << endl;
+    cout << "   Each student gets a unique roll number automatically." << endl;
+    cout << "\n6. Purchasing Books:-" << endl;
+    cout << "   Select a book by its serial number and confirm purchase." << endl;
+    cout << "   Units available will decrease after successful purchase." << endl;
+    cout << "\n7. Viewing Book Information:-" << endl;
+    cout << "   Use the 'View Book' option to check title, author, year," << endl;
+    cout << "   and units available before making a purchase decision." << endl;
+    cout << "\n8. Managing Student Data:-" << endl;
+    cout << "   Use 'Edit Student' option to update student information." << endl;
+    cout << "   View individual or all student records as needed." << endl;
+    cout << "\n9. Stock Management:-" << endl;
+    cout << "   The system automatically updates stock when books are" << endl;
+    cout << "   purchased. Out of stock books cannot be purchased." << endl;
+    cout << "\n10. Returning to Menu:-" << endl;
+    cout << "    Enter '0' at any menu prompt to return to the previous" << endl;
+    cout << "    menu or home screen. Press ESC to exit the application." << endl;
+    cout << "\n"
+         << endl;
+    cout << "Press any key to go back to home screen" << endl;
     getch();
 }
 
@@ -403,6 +640,7 @@ int fnctn1() // add book
     cout << "\nNew book added successfully !" << endl;
     sn += 1;
     shdt = 0;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
@@ -419,6 +657,7 @@ int fnctn2() // view book
     cout << "Author = " << l[x - 1].author << endl;
     cout << "Year of publication = " << l[x - 1].year << endl;
     cout << "Units = " << l[x - 1].units << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
@@ -448,10 +687,33 @@ int fnctn3() // show all books
         cout << "All Books are deleted !" << endl;
         cout << "\nPress any key to go back to the main menu" << endl;
     }
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn4() // delete book
+int fnctn4() // edit book
+{
+    system("cls");
+    int e1;
+    cout << "===================================" << endl;
+    cout << "            EDIT BOOK              " << endl;
+    cout << "===================================" << endl;
+    cout << "\nEnter Book Sr no = ";
+    cin >> e1;
+    cout << "\nSaved details:-" << endl;
+    cout << "Title = " << l[e1 - 1].title << endl;
+    cout << "Author = " << l[e1 - 1].author << endl;
+    cout << "Year of publication = " << l[e1 - 1].year << endl;
+    cout << "Units = " << l[e1 - 1].units << endl;
+    cout << "\nEnter new units:-" << endl;
+    cout << "Units = ";
+    cin >> l[e1 - 1].units;
+    cout << "\nBook edited successfully !" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
+    getch();
+}
+
+int fnctn5() // delete book
 {
     system("cls");
     int d1;
@@ -471,10 +733,11 @@ int fnctn4() // delete book
     l[d1 - 1].units = 00;
 
     cout << "Book deleted successfully !" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn5() // delete all books
+int fnctn6() // delete all books
 {
     system("cls");
     cout << "===================================" << endl;
@@ -492,10 +755,11 @@ int fnctn5() // delete all books
     sn = 1;
     shdt = 1;
     cout << "\nData of all book has been deleted and reset" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn6() // add new student
+int fnctn7() // add new student
 {
     system("cls");
     cout << "===================================" << endl;
@@ -503,6 +767,8 @@ int fnctn6() // add new student
     cout << "===================================" << endl;
     cout << "\nStudent roll no=" << n << endl;
     s[n - 1].Rollno = n;
+    s[n - 1].nobk = 0;
+    s[n - 1].numRent = 0;
     cout << "Name = ";
     cin.ignore();
     getline(cin, s[n - 1].name);
@@ -514,10 +780,11 @@ int fnctn6() // add new student
     s[n - 1].toUpper();
     cout << "\nNew student added successfully !" << endl;
     n += 1;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn7() // edit student
+int fnctn8() // edit student
 {
     system("cls");
     cout << "===================================" << endl;
@@ -545,10 +812,11 @@ int fnctn7() // edit student
     s[e1 - 1].toUpper();
 
     cout << "\nStudent edited successfully !" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn8() // show student
+int fnctn9() // show student
 {
     int x;
     system("cls");
@@ -562,11 +830,13 @@ int fnctn8() // show student
     cout << "Class = " << s[x - 1].className << endl;
     cout << endl;
     s[x - 1].displaybuy();
+    s[x - 1].displayrent();
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
     system("cls");
 }
 
-int fnctn9() // show all student
+int fnctn10() // show all student
 {
     system("cls");
     system("cls");
@@ -574,18 +844,27 @@ int fnctn9() // show all student
     cout << "===================================" << endl;
     cout << "        STUDENT DIRECTORY          " << endl;
     cout << "===================================" << endl;
-    for (int y = 0; y < n - 1; y++)
+
+    if (shstd == 1)
     {
-        cout << "\nStudent roll no=" << s[y].Rollno << endl;
-        cout << "Name = " << s[y].name << endl;
-        cout << "Age = " << s[y].age << endl;
-        cout << "Class = " << s[y].className << endl;
-        cout << endl;
+        for (int y = 0; y < n - 1; y++)
+        {
+            cout << "\nStudent roll no=" << s[y].Rollno << endl;
+            cout << "Name = " << s[y].name << endl;
+            cout << "Age = " << s[y].age << endl;
+            cout << "Class = " << s[y].className << endl;
+        }
     }
+    else if (shstd == 0)
+    {
+        cout << "All students are deleted !" << endl;
+        cout << "\nPress any key to go back to the main menu" << endl;
+    }
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn10() // buy
+int fnctn11() // buy
 {
     system("cls");
     cout << "===================================" << endl;
@@ -615,19 +894,113 @@ int fnctn10() // buy
     {
         cout << "\nBook is out of stock !" << endl;
     }
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn11() // rent
+int fnctn12() // rent
 {
     system("cls");
-    cout << "In section fnctn11 ";
+    cout << "===================================" << endl;
+    cout << "             RENT A BOOK           " << endl;
+    cout << "===================================" << endl;
+    cout << "Enter student roll no=";
+    int s1;
+    cin >> s1;
+    cout << "\nYour name = " << s[s1 - 1].name << endl;
+    cout << "Your class = " << s[s1 - 1].className << endl;
+    cout << "Your age = " << s[s1 - 1].age << endl;
+    cout << "\n\nEnter Book Srno to be rented= ";
+    int b1;
+    cin >> b1;
+    cout << "Title = " << l[b1 - 1].title << endl;
+    cout << "Author = " << l[b1 - 1].author << endl;
+    cout << "Year of publication = " << l[b1 - 1].year << endl;
+    cout << "Units available = " << l[b1 - 1].units << endl;
+    getch();
+    if (l[b1 - 1].units > 0)
+    {
+        l[b1 - 1].units -= 1;
+        cout << "\nBook rented successfully !" << endl;
+        s[s1 - 1].rentbook(b1);
+    }
+    else
+    {
+        cout << "\nBook is out of stock !" << endl;
+    }
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
 
-int fnctn12() // return
+int fnctn13() // return
 {
     system("cls");
-    cout << "In section fnctn12 ";
+    cout << "===================================" << endl;
+    cout << "             RETURN A BOOK         " << endl;
+    cout << "===================================" << endl;
+    cout << "Enter student roll no=";
+    int s1;
+    cin >> s1;
+    cout << "\nYour name = " << s[s1 - 1].name << endl;
+    cout << "Your class = " << s[s1 - 1].className << endl;
+    cout << "Your age = " << s[s1 - 1].age << endl;
+    cout << endl;
+    s[s1 - 1].displayrent();
+    cout << "\n\nEnter Book Srno to be returned= ";
+    int b1;
+    cin >> b1;
+    cout << "Title = " << l[b1 - 1].title << endl;
+    cout << "Author = " << l[b1 - 1].author << endl;
+    cout << "Year of publication = " << l[b1 - 1].year << endl;
+    getch();
+    l[b1 - 1].units += 1;
+    cout << "\nBook returned successfully !" << endl;
+    s[s1 - 1].returnbook(b1);
+    cout << "\nPress any key to go back to the main menu" << endl;
+    getch();
+}
+int fnctn14() // delete student
+{
+    system("cls");
+    int d1;
+    cout << "===================================" << endl;
+    cout << "            DELETE STUDENT         " << endl;
+    cout << "===================================" << endl;
+    cout << "\nEnter student Roll no=";
+    cin >> d1;
+    cout << "\nName = " << s[d1 - 1].name << endl;
+    cout << "Age = " << s[d1 - 1].age << endl;
+    cout << "Class = " << s[d1 - 1].className << endl;
+
+    s[d1 - 1].name = "deleted";
+    s[d1 - 1].age = 00;
+    strcpy(s[d1 - 1].className, "deleted");
+    s[d1 - 1].nobk = 0;
+    s[d1 - 1].numRent = 0;
+
+    cout << "\nStudent deleted successfully !" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
+    getch();
+}
+int fnctn15() // delete all students
+{
+    system("cls");
+    cout << "===================================" << endl;
+    cout << "         DELETE ALL STUDENTS       " << endl;
+    cout << "===================================" << endl;
+    cout << "\nPress any key to delete all students-" << endl;
+    getch();
+    for (int z = 0; z < n - 1; z++)
+    {
+        s[z].name = "deleted";
+        s[z].age = 00;
+        strcpy(s[z].className, "deleted");
+        s[z].nobk = 0;
+        s[z].numRent = 0;
+    }
+    n = 1;
+    shstd = 1;
+    cout << "\nData of all students has been deleted and reset" << endl;
+    cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
