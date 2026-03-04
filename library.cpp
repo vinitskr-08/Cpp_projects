@@ -37,7 +37,6 @@ public:
     int rent[100];
     int nobk;
     int numRent;
-    student() : Rollno(0), age(0), nobk(0), numRent(0) { className[0] = '\0'; }
     void toUpper()
     {
         for (char &c : name)
@@ -121,8 +120,9 @@ int n = 1;
 int sn = 1;
 int shdt = 0;
 int shstd = 1;
-int saveData();
-int loadData();
+
+void saveData();
+void loadData();
 
 enum class portal
 {
@@ -242,75 +242,6 @@ int main()
     cout << "\n\nPress any key to exit";
     getch();
     system("cls");
-}
-int saveData()
-{
-    ofstream file("library.dat");
-
-    file << sn << " " << n << endl;
-    // Save all books
-    for (int i = 0; i < sn - 1; i++)
-    {
-        file << l[i].Srno << " " << l[i].title << " " << l[i].author << " "
-             << l[i].year << " " << l[i].units << endl;
-    }
-    // Save all students with their books
-    for (int i = 0; i < n - 1; i++)
-    {
-        file << s[i].Rollno << " " << s[i].name << " " << s[i].age << " "
-             << s[i].className << " " << s[i].nobk << " " << s[i].numRent << endl;
-
-        // Save bought books for this student
-        for (int j = 0; j < s[i].nobk; j++)
-        {
-            file << s[i].book[j] << " ";
-        }
-        file << endl;
-
-        // Save rented books for this student
-        for (int j = 0; j < s[i].numRent; j++)
-        {
-            file << s[i].rent[j] << " ";
-        }
-        file << endl;
-    }
-    file.close();
-    return 1;
-}
-
-int loadData()
-{
-    ifstream file("library.dat");
-    if (!file.is_open())
-    {
-        return 0;
-    }
-    // Load number of books and students
-    file >> sn >> n;
-    // Load all books
-    for (int i = 0; i < sn - 1; i++)
-    {
-        file >> l[i].Srno >> l[i].title >> l[i].author >> l[i].year >> l[i].units;
-    }
-    // Load all students with their books
-    for (int i = 0; i < n - 1; i++)
-    {
-        file >> s[i].Rollno >> s[i].name >> s[i].age >> s[i].className >> s[i].nobk >> s[i].numRent;
-
-        // Load bought books for this student
-        for (int j = 0; j < s[i].nobk; j++)
-        {
-            file >> s[i].book[j];
-        }
-
-        // Load rented books for this student
-        for (int j = 0; j < s[i].numRent; j++)
-        {
-            file >> s[i].rent[j];
-        }
-    }
-    file.close();
-    return 1;
 }
 int wlcm()
 {
@@ -491,6 +422,80 @@ int operation2(int menu2)
         fnctn14();
         break;
     }
+}
+
+void saveData()
+{
+    ofstream file("library.dat");
+    file << sn << "\n" << n << "\n";
+    // Save all books
+    for (int i = 0; i < sn - 1; i++)
+    {
+        file << l[i].Srno << "\n";
+        file << l[i].title << "\n";
+        file << l[i].author << "\n";
+        file << l[i].year << "\n";
+        file << l[i].units << "\n";
+    }
+
+    // Save all students
+    for (int i = 0; i < n - 1; i++)
+    {
+        file << s[i].Rollno << "\n";
+        file << s[i].name << "\n";
+        file << s[i].age << "\n";
+        file << s[i].className << "\n";
+        file << s[i].nobk << "\n";
+        file << s[i].numRent << "\n";
+
+        for (int j = 0; j < s[i].nobk; j++)
+            file << s[i].book[j] << " ";
+        file << "\n";
+
+        for (int j = 0; j < s[i].numRent; j++)
+            file << s[i].rent[j] << " ";
+        file << "\n";
+    }
+    file.close();
+}
+
+void loadData()
+{
+    ifstream file("library.dat");
+    if (!file.is_open())
+    {
+        return;
+    }
+    file >> sn >> n;
+    // Read all books
+    for (int i = 0; i < sn - 1; i++)
+    {
+        file >> l[i].Srno;
+        file.ignore();
+        getline(file, l[i].title);
+        getline(file, l[i].author);
+        file >> l[i].year;
+        file >> l[i].units;
+    }
+
+    // Read all students
+    for (int i = 0; i < n - 1; i++)
+    {
+        file >> s[i].Rollno;
+        file.ignore();
+        getline(file, s[i].name);
+        file >> s[i].age;
+        file.ignore();
+        file.getline(s[i].className, 10);
+        file >> s[i].nobk >> s[i].numRent;
+        // Read bought books
+        for (int j = 0; j < s[i].nobk; j++)
+            file >> s[i].book[j];
+        // Read rented books
+        for (int j = 0; j < s[i].numRent; j++)
+            file >> s[i].rent[j];
+    }
+    file.close();
 }
 
 int abtlib() // about library
@@ -944,21 +949,25 @@ int fnctn13() // return
     cout << "\nYour name = " << s[s1 - 1].name << endl;
     cout << "Your class = " << s[s1 - 1].className << endl;
     cout << "Your age = " << s[s1 - 1].age << endl;
+ 
     cout << endl;
     s[s1 - 1].displayrent();
     cout << "\n\nEnter Book Srno to be returned= ";
     int b1;
     cin >> b1;
+
     cout << "Title = " << l[b1 - 1].title << endl;
     cout << "Author = " << l[b1 - 1].author << endl;
     cout << "Year of publication = " << l[b1 - 1].year << endl;
     getch();
+
     l[b1 - 1].units += 1;
     cout << "\nBook returned successfully !" << endl;
     s[s1 - 1].returnbook(b1);
     cout << "\nPress any key to go back to the main menu" << endl;
     getch();
 }
+
 int fnctn14() // delete student
 {
     system("cls");
